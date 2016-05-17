@@ -1,5 +1,5 @@
 # A rudimentary configuration file
 # Example
-127.0.0.1 	# host
+localhost 	# host
 2300		# port
 			# constant recv size if we wanted one

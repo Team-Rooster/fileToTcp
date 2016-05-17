@@ -12,7 +12,7 @@ Config = namedtuple('Config', ['host', 'port', 'size'])
 def load_config():
     # Rudimentary config file
     data = []
-	with open(CFG_FILE) as f:
+    with open(CFG_FILE) as f:
         for line in f.readlines():
             # Strip comments
             if '#' in line:
@@ -22,12 +22,15 @@ def load_config():
 
             try:
                 data.append(int(line))
+                print(line)
             except ValueError:
-                pass
+                if len(line) > 0:
+                    data.append(line)
+                    print(line)
 
     # Pad the config with -1's for fields that do not exist
-    data += [-1, ] * (len(Config._fields) - len(data))
-    return Config(data)
+    data += [-1] * (len(Config._fields) - len(data))
+    return Config(*data)
 
 def load_sizes(config):
     #
@@ -36,8 +39,8 @@ def load_sizes(config):
 
     # Otherwise read varying sizes from a list
     with open(RECV_SIZE_LIST) as f:
-		for size in f.readlines():
-			yield size
+        for size in f.readlines():
+            yield size
 
 def tcp_client():
     # Load configuration
@@ -45,23 +48,23 @@ def tcp_client():
 
     # Create connection
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(config.host, config.port)
+    client.connect((config.host, config.port))
 
     # Loop over input data and send
     sizes = load_sizes(config)
 
     for i, fname in enumerate(os.listdir(INPUT_DIR)):
-        with open(os.path.join(INPUT_DIR, fname)) as f:
+        with open(os.path.join(INPUT_DIR, fname), 'rb') as f:
             data = f.read()
 
-    	client.send(data)
-        size = sizes.next()
-    	
+        client.send(data)
+        size = sizes.__next__()
+        
         if size == -1:
             continue
 
-		response = client.recv(size)
-        with open(os.path.join(OUTPUT_DIR, str(i)), 'w') as f:
+        response = client.recv(size)
+        with open(os.path.join(OUTPUT_DIR, str(i)), 'wb') as f:
             f.write(response)
 
 if __name__ == '__main__':
